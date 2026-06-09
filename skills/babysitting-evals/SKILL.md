@@ -19,11 +19,13 @@ talks to it so you can observe live evals from a separate shell.
 > observe via `ctl` and `release` finished processes, but you can't mutate a running
 > eval through it. What changing a running eval is *actually* possible today:
 > - **Cancel an individual sample or task** — a **human**, from the eval's **TUI**.
-> - **Stop the whole eval/process** — the human (Ctrl+C) **or you** (`kill <pid>`,
->   after confirming with the user — it stops the entire run).
+> - **Stop the whole eval/process** — the human (Ctrl+C) **or you**
+>   (`kill -INT <pid>`, after confirming with the user — same graceful path as Ctrl+C;
+>   completed samples are scored and the log finalizes as `cancelled`. Don't use plain
+>   `kill` / SIGTERM, Inspect has no handler for it and unflushed samples are lost).
 >
 > So: spot the problem, then either hand the per-sample/task **cancel** to the human
-> (TUI), or — if the whole run is clearly bad — **stop it yourself** (`kill <pid>`),
+> (TUI), or — if the whole run is clearly bad — **stop it yourself** (`kill -INT <pid>`),
 > fix/adjust, and relaunch.
 
 > **Use the tool's own docs — don't trust this file for the surface.** The exact
@@ -32,19 +34,22 @@ talks to it so you can observe live evals from a separate shell.
 > learn/confirm the surface; it evolves. This skill is the *workflow and judgment*.
 
 ## Quick loop (the common path)
-1. `inspect ctl ls` — find running evals (note `task_id`, `pid`, `log_location`).
+1. `inspect ctl ls` — find running evals (note `task_id`). Add `--json` if you also need `pid` / `log_location` (those are not in the human table).
 2. `inspect ctl samples <task>` — per-sample status/progress; repeat to track.
 3. On trouble: `inspect ctl sample <task> <sid>` (errors) or `ctl events <task> <sid>`
    (what it's doing).
 4. Can't fix via `ctl` → **hand off**: point the human at the sample in the TUI to
-   cancel, or stop the run (`kill <pid>`, with their OK). Details below.
+   cancel, or stop the run (`kill -INT <pid>`, with their OK — same path as Ctrl+C).
+   Details below.
 
 ## The surface, briefly (confirm details with `--help`)
 Read-only commands today: `ls`, `samples`, `sample`, `errors`, `events`, `release`.
 - `ls` — running evals (status, counts, pid, `log_location`). `samples` — per-sample
-  table (status / retries / score / time / tokens / `last_activity_at`);
+  table (status / retries / score / time / tokens / `idle` since last activity);
+  `--json` carries the raw `last_activity_at` timestamp for delta math;
   `--active-since <ts>` gives a "what changed since I last looked" delta.
-- `sample` / `errors` — one sample's error history / the errored-or-retried subset.
+- `sample` — one sample's full attempt history (every retry, the final error).
+- `errors` — task-wide list of every sample that errored or was retried. The natural first call when babysitting ("did anything go wrong?").
 - `events` — **a running sample's transcript events** (`model`/`tool`/`error`/`score`)
   via cursored pull. The way to see *what a sample is actually doing*.
 - `release` — free a finished `--keep-alive` process. Does NOT cancel anything.
@@ -74,7 +79,7 @@ which decide who (if anyone) can intervene and whether the surface survives comp
 | Display / TUI | usually default `--display full` → **the human has a TUI and can cancel a sample/task** | you choose: `--display none` → **no TUI, nobody can cancel a sample/task**; or `tmux` + `--display full` → human can attach & cancel |
 | `--keep-alive` | often **omitted** → `ctl` surface (+ `release`) **vanishes when the eval finishes** | you should **add it** → eval stays inspectable + `release`-able after it finishes |
 | Do you know the config? | no — get `log_location` from `ctl ls`, infer keep-alive behaviorally, or ask | yes — you picked `--log-dir` / keep-alive / display |
-| Stop the whole run | the human (Ctrl+C) | you (`kill <pid>`, with their OK) |
+| Stop the whole run | the human (Ctrl+C) | you (`kill -INT <pid>`, with their OK) |
 
 Takeaway: a **user-launched** run usually already has a TUI (hand per-sample cancels
 to them) but may lack `--keep-alive`; when **you** launch, default to `--keep-alive`
@@ -99,9 +104,25 @@ The full TUI renders in the detached session and you keep monitoring via `ctl` i
 parallel; from it the user can cancel an individual sample or task. Install `tmux`
 yourself if it's missing.
 
+> **Tmux management is fallible (yours and theirs).** Across a long babysitting
+> session you can easily lose track of a detached tmux session, and the user's
+> escape hatches matter. After launch, **surface the session name and these commands
+> to the user** so they can manage it independently:
+> - `tmux ls` — list running sessions.
+> - `tmux capture-pane -t eval_<name> -p` — read pane contents without attaching.
+>   Use this yourself when you want to peek; `attach` blocks on non-TTY shells.
+> - `tmux attach -t eval_<name>` — interact (detach with Ctrl-b then d).
+> - `tmux kill-session -t eval_<name>` — force-clean a stuck or orphaned session.
+>
+> Before launch, check `tmux has-session -t eval_<name>` to avoid name collisions on
+> reruns, and after launch give Inspect a few seconds to bind the control endpoint
+> before declaring "nothing running" from `ctl ls`. If the user is already inside
+> tmux, the nested behavior can confuse both of you; suggest they detach from their
+> outer session first.
+
 If TUI access isn't wanted, launch headless (`--display none`) — then per-sample/task
 cancellation isn't possible (needs the TUI), though you can still stop the whole run
-(`kill <pid>`, confirm first). Don't imply the run can't be stopped.
+(`kill -INT <pid>`, confirm first). Don't imply the run can't be stopped.
 
 ### Confirm launch choices first — batch the questions
 Ask only what the user didn't specify, in **one** AskUserQuestion (≤4), drawing from:
@@ -131,15 +152,25 @@ Two things to settle up front:
    in-progress too), use the **`reading-logs`** skill — that's for results/detail, not
    live monitoring (which is `ctl`).
 
-You can monitor/diagnose but can't `release` or cancel their run — if you find an
+You can monitor/diagnose but **shouldn't** `release` their run (there's no ownership
+check today, but releasing a still-running eval is a no-op anyway — parking only
+happens post-completion). You **can't** cancel via `ctl` (read-only). If you find an
 issue, point them at the sample in their TUI.
 
 ## Diagnosing issues
 - **Stalls** — judge by **`last_activity_at` deltas across ≥2 polls** (not a single
   snapshot, and NOT `total_tokens`/`message_count`, which sit at 0/1 during a long
-  generation). Corroborate with `ctl events <task> <sid> --tail N` — are new events
-  still arriving? Calibrate the poll interval to observed cadence (sandboxed/agentic
-  samples can go minutes between events); don't hardcode it.
+  generation). **Idle ≠ stall.** `last_activity_at` advances only when an event is
+  emitted, so a single in-flight call (model generation with extended thinking, a
+  sandbox `exec`, a slow tool) can legitimately leave it frozen with no new
+  `events --since <cursor>` for minutes at a time. Calibrate the window to the task:
+  quick QA samples are suspicious at 30s; agentic / sandboxed / extended-thinking
+  samples can routinely go 5–10 minutes between events. Also check **what the last
+  event was** — a ModelEvent in flight means the model is generating; a SandboxEvent
+  in flight means a command is running; a tool call waiting on its return means a
+  tool/network call is outstanding. Each implies a different "is this normal"
+  threshold. Alert only after corroborating across a calibrated window AND looking at
+  the last event type; don't hardcode the poll interval.
 - **Errors / retry-exhaustion** — `errors` for the triage list; `sample <task> <sid>`
   for the full attempt history + final error; `events --type error,model` to see *what
   led to* the failure. When a sample errors after exhausting retries, notify
@@ -177,8 +208,10 @@ memory).
 ## Release / cleanup
 `inspect ctl release` (or `--pid` when several are parked); finish with `ls` empty.
 When you only mean to free a *finished* parked process, use `release` (the clean exit)
-— not `kill`. (`kill <pid>` is for deliberately *stopping a bad run*, with the user's
-OK.)
+— not `kill`. (`kill -INT <pid>` is for deliberately *stopping a bad run*, with the
+user's OK — Inspect handles SIGINT as a graceful cancellation, scoring completed
+samples and finalizing the log as `cancelled`. Plain `kill` / SIGTERM has no handler,
+so unflushed samples are lost and the log may not finalize.)
 
 ## `inspect-flow`
 **Don't use `inspect-flow` for control-channel babysitting today.** `flow run` has no
