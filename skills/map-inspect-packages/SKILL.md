@@ -5,7 +5,7 @@ description: Use whenever the user is working with Inspect AI or any of its ecos
 
 # Inspect AI Ecosystem
 
-Inspect AI is the UK AI Security Institute's open-source Python framework for LLM evaluations. The ecosystem is split across several packages, each owning a distinct concern. Pick the right one before writing code; fetch the package's `llms.txt` (or docs root) before calling its API or writing more than a few lines against it.
+Inspect AI is an open-source Python framework for LLM evaluations. The core (`inspect_ai`) was originally developed by the UK AI Security Institute (AISI) and is now primarily maintained by Meridian Labs. `inspect_evals` is co-maintained by AISI and outside contributors; the remaining ecosystem packages (Flow, Scout, Viz, SWE, Harbor) are maintained by Meridian Labs. Each package owns a distinct concern. Pick the right one before writing code; fetch the package's `llms.txt` (or docs root) before calling its API or writing more than a few lines against it.
 
 **Defer to a more specific skill if one exists.** If another installed skill's description more specifically matches the request (e.g. one dedicated to log reading, log mutation, eval writing, etc.), use that one. This skill covers ecosystem routing only.
 
@@ -38,7 +38,7 @@ The table above is curated for the most-used packages. For the comprehensive eco
 
 **ALWAYS fetch and consult the relevant `llms.txt` (or docs root) before answering any question or writing any code about these packages**, even when you believe you know the API. The descriptions above are routing hints, not specs; the docs are the source of truth and change frequently. Prior-knowledge answers drift quickly and may reference renamed, moved, or removed APIs.
 
-**Keep packages aligned with the docs.** Check the user's installed version (`pip show <package>`) against the latest on PyPI. If it's older, propose upgrading (`pip install -U <package>`) so the features in the docs are actually available at runtime. If the user can't upgrade (pinned deps, monorepo constraints), flag the version gap and consult the installed version's release notes for any drift.
+**Keep packages aligned with the docs.** Check the user's installed version (`pip show <package>`) against the latest on PyPI. If it's older, propose upgrading (`pip install -U <package>`) so the features in the docs are actually available at runtime. If the user can't upgrade (pinned deps, monorepo constraints), flag the version gap.
 
 **Tip: `inspect.aisi.org.uk` markdown convention.** Any docs page on `inspect.aisi.org.uk` has a markdown variant: append `.html.md` to the URL (e.g. `https://inspect.aisi.org.uk/agents.html.md`). The HTML versions are JS-rendered and may return empty content to fetch tools; use the `.html.md` variant for reliable agent-readable content.
 
