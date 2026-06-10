@@ -1,0 +1,21 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "meridian",
+  "description": "Meridian Labs Claude Code plugins for the Inspect AI ecosystem.",
+  "owner": {
+    "name": "Meridian Labs"
+  },
+  "plugins": [
+    {
+      "name": "inspect-skills",
+      "description": "Skills for working with Inspect AI and its ecosystem packages (Evals, Flow, Scout, Viz, SWE, Harbor, sandboxes). Covers ecosystem routing, eval log reading, and live eval babysitting via inspect ctl.",
+      "author": {
+        "name": "Meridian Labs"
+      },
+      "category": "development",
+      "source": "./",
+      "strict": false,
+      "homepage": "https://github.com/meridianlabs-ai/inspect-skills"
+    }
+  ]
+}
