@@ -1,5 +1,5 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "meridian",
   "description": "Meridian Labs Claude Code plugins for the Inspect AI ecosystem.",
   "owner": {
