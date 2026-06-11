@@ -1,0 +1,43 @@
+name: PR title lint
+
+# Enforce Conventional Commits format on PR titles so release-please can
+# reliably bump versions and generate CHANGELOG entries. We squash-on-merge,
+# so the resulting main-branch commit IS the PR title.
+#
+# Allowed types match release-please-config.json#changelog-sections.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Conventional Commit types accepted in PR titles.
+          # Keep aligned with release-please-config.json#changelog-sections.
+          types: |
+            feat
+            fix
+            docs
+            refactor
+            perf
+            chore
+            ci
+            build
+            test
+            style
+          # Require a colon-space after the type (`feat: ...`, not `feat:...`).
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
