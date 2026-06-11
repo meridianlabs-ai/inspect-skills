@@ -8,6 +8,6 @@
   "interface": {
     "displayName": "Inspect Skills",
     "shortDescription": "Skills for Inspect AI and its ecosystem",
-    "category": "Productivity"
+    "category": "Developer Tools"
   }
 }
