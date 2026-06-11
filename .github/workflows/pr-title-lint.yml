@@ -22,18 +22,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Conventional Commit types accepted in PR titles.
-          # Keep aligned with release-please-config.json#changelog-sections.
+          # Order mirrors release-please-config.json#changelog-sections
+          # (changelog-visible types first, then non-changelog types).
           types: |
             feat
             fix
+            perf
+            revert
             docs
             refactor
-            perf
             chore
             ci
-            build
             test
-            style
           # Require a colon-space after the type (`feat: ...`, not `feat:...`).
           requireScope: false
           subjectPattern: ^(?![A-Z]).+$

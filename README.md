@@ -62,30 +62,19 @@ Common prefixes and what they do:
 |---|---|---|
 | `feat:` | minor version bump on next Codex release | yes (Features) |
 | `fix:` | patch version bump on next Codex release | yes (Bug Fixes) |
-| `perf:` | patch | yes (Performance Improvements) |
-| `revert:` | patch | yes (Reverts) |
-| `docs:` | no release on its own; piggybacks the next `feat:`/`fix:` | yes (Documentation) |
-| `refactor:` / `chore:` / `ci:` / `build:` / `test:` / `style:` | no release on its own | no |
+| `perf:` | patch version bump on next Codex release | yes (Performance Improvements) |
+| `revert:` | patch version bump on next Codex release | yes (Reverts) |
+| `docs:` | none on its own; piggybacks the next `feat:` / `fix:` | yes (Documentation) |
+| `refactor:` / `chore:` / `ci:` / `test:` | none | no |
 
-**Important: SKILL.md content changes should use `fix:`, not `docs:`.** The skills ARE the user-facing artifact, so corrections and refinements are fixes to it. `docs:` is reserved for repo-level documentation that isn't shipped to users (README, TODOS, this Contributing section).
+**Important: SKILL.md content changes should use `fix:`, not `docs:`.** The skills ARE the user-facing artifact, so corrections and refinements are fixes to it. `docs:` is reserved for repo-level documentation that isn't shipped to users.
 
 ### Releases
 
-Releases use [release-please](https://github.com/googleapis/release-please-action) on every push to `main`. The flow:
+Claude Code and Codex have different release flows because their plugin update models differ:
 
-1. You merge a feature PR with a Conventional Commit title.
-2. release-please opens (or updates) a "Release PR" that bumps the version and writes a CHANGELOG entry.
-3. You merge the Release PR when you want to ship. A Git tag and GitHub release are created.
+- **Claude Code** uses the commit SHA as the implicit plugin version. If a user has enabled auto-update for the `meridian` marketplace, every push to `main` reaches them on their next session. By default, third-party marketplaces are manual-update, so users either toggle auto-update on (see [Install](#claude-code-recommended)) or run `/plugin marketplace update meridian` + `/reload-plugins` to pull changes.
 
-### Why Claude Code and Codex have different release behaviors
+- **Codex** caches each plugin by the `version` field in `.codex-plugin/plugin.json`. New commits to `main` do not reach Codex users via `codex plugin marketplace upgrade meridian` until the version bumps.
 
-The two platforms have different update models, so we ship to them differently:
-
-| | Claude Code | Codex |
-|---|---|---|
-| Update trigger | Auto-update at session start (per the SHA of the marketplace HEAD) | Manual `codex plugin marketplace upgrade meridian` |
-| Version key | Commit SHA (no version field) | `plugin.json#version` (release-please-bumped) |
-| When users see changes | On the next session after every push to `main` | After the Release PR is merged (bump invalidates Codex's version-keyed cache) |
-| Affected files | `.claude-plugin/marketplace.json` | `plugins/inspect-skills/.codex-plugin/plugin.json` |
-
-This is by design: Claude Code's auto-update supports fast iteration; Codex's version-keyed cache requires explicit version bumps ([openai/codex#21138](https://github.com/openai/codex/issues/21138)). Merging a feature PR to `main` reaches Claude Code users immediately; Codex users see the change after the Release PR is merged.
+We use [release-please](https://github.com/googleapis/release-please-action) primarily to keep Codex users on the latest content. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Merging the Release PR bumps the version in `plugins/inspect-skills/.codex-plugin/plugin.json`, after which Codex users can run `codex plugin marketplace upgrade meridian` to pull the new content.
