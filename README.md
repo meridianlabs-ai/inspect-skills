@@ -25,7 +25,16 @@ Third-party marketplaces are manual-update by default. To get our changes automa
 
 To update manually instead: `/plugin marketplace update meridian` then `/reload-plugins`.
 
-### Other agents (Codex, Cursor, GitHub Copilot, etc.)
+### Codex
+
+```bash
+codex plugin marketplace add meridianlabs-ai/inspect-skills
+codex plugin add inspect-skills@meridian
+```
+
+To update: `codex plugin marketplace upgrade meridian` (Codex has no auto-update equivalent; updates are manual).
+
+### Other agents (Cursor, GitHub Copilot, etc.)
 
 ```bash
 npx skills add meridianlabs-ai/inspect-skills --agent <agent> -g -y
@@ -37,6 +46,35 @@ npx skills add meridianlabs-ai/inspect-skills --agent <agent> -g -y
 
 | Skill | When it fires |
 |---|---|
-| [`map-inspect-packages`](skills/map-inspect-packages/SKILL.md) | Starting work in the Inspect AI ecosystem. Picks the right package for a given task and points at its docs. |
-| [`reading-logs`](skills/reading-logs/SKILL.md) | Reading, inspecting, or processing Inspect AI eval log files (`.eval` or `.json`). Covers the `inspect_ai.log` API and memory-safe patterns. |
-| [`babysitting-evals`](skills/babysitting-evals/SKILL.md) | Monitoring and diagnosing running Inspect AI evals via `inspect ctl` (the read-only control-channel CLI). Covers stall diagnosis, error triage, launch-and-watch workflows, and graceful stops. |
+| [`map-inspect-packages`](plugins/inspect-skills/skills/map-inspect-packages/SKILL.md) | Starting work in the Inspect AI ecosystem. Picks the right package for a given task and points at its docs. |
+| [`reading-logs`](plugins/inspect-skills/skills/reading-logs/SKILL.md) | Reading, inspecting, or processing Inspect AI eval log files (`.eval` or `.json`). Covers the `inspect_ai.log` API and memory-safe patterns. |
+| [`babysitting-evals`](plugins/inspect-skills/skills/babysitting-evals/SKILL.md) | Monitoring and diagnosing running Inspect AI evals via `inspect ctl` (the read-only control-channel CLI). Covers stall diagnosis, error triage, launch-and-watch workflows, and graceful stops. |
+
+## Contributing
+
+### Commit conventions
+
+PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/) (enforced via the `pr-title-lint` workflow). The repo squashes PRs on merge, so the PR title becomes the main-branch commit.
+
+Common prefixes and what they do:
+
+| Prefix | Effect on releases | Visible in CHANGELOG? |
+|---|---|---|
+| `feat:` | minor version bump on next Codex release | yes (Features) |
+| `fix:` | patch version bump on next Codex release | yes (Bug Fixes) |
+| `perf:` | patch version bump on next Codex release | yes (Performance Improvements) |
+| `revert:` | patch version bump on next Codex release | yes (Reverts) |
+| `docs:` | none on its own; piggybacks the next `feat:` / `fix:` | yes (Documentation) |
+| `refactor:` / `chore:` / `ci:` / `test:` | none | no |
+
+**Important: SKILL.md content changes should use `fix:`, not `docs:`.** The skills ARE the user-facing artifact, so corrections and refinements are fixes to it. `docs:` is reserved for repo-level documentation that isn't shipped to users.
+
+### Releases
+
+Claude Code and Codex have different release flows because their plugin update models differ:
+
+- **Claude Code** uses the commit SHA as the implicit plugin version. If a user has enabled auto-update for the `meridian` marketplace, every push to `main` reaches them on their next session. By default, third-party marketplaces are manual-update, so users either toggle auto-update on (see [Install](#claude-code-recommended)) or run `/plugin marketplace update meridian` + `/reload-plugins` to pull changes.
+
+- **Codex** caches each plugin by the `version` field in `.codex-plugin/plugin.json`. New commits to `main` do not reach Codex users via `codex plugin marketplace upgrade meridian` until the version bumps.
+
+We use [release-please](https://github.com/googleapis/release-please-action) primarily to keep Codex users on the latest content. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Merging the Release PR bumps the version in `plugins/inspect-skills/.codex-plugin/plugin.json`, after which Codex users can run `codex plugin marketplace upgrade meridian` to pull the new content.

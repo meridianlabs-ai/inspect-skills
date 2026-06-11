@@ -1,0 +1,38 @@
+name: PR title lint
+
+# Enforce Conventional Commits format on PR titles so release-please can
+# reliably bump versions and generate CHANGELOG entries. We squash-on-merge,
+# so the resulting main-branch commit IS the PR title.
+#
+# Allowed types match release-please-config.json#changelog-sections.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Conventional Commit types accepted in PR titles.
+          # Order mirrors release-please-config.json#changelog-sections
+          # (changelog-visible types first, then non-changelog types).
+          types: |
+            feat
+            fix
+            perf
+            revert
+            docs
+            refactor
+            chore
+            ci
+            test
+          # Scopes (e.g. `feat(api): ...`) are optional.
+          requireScope: false

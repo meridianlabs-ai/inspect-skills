@@ -1,0 +1,13 @@
+{
+  "name": "inspect-skills",
+  "version": "0.1.0",
+  "description": "Skills for working with Inspect AI and its ecosystem packages (Evals, Flow, Scout, Viz, SWE, Harbor, sandboxes). Covers ecosystem routing, eval log reading, and live eval babysitting via inspect ctl.",
+  "repository": "https://github.com/meridianlabs-ai/inspect-skills",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Inspect Skills",
+    "shortDescription": "Skills for Inspect AI and its ecosystem",
+    "category": "Developer Tools"
+  }
+}

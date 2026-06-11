@@ -1,0 +1,23 @@
+name: Release Please
+
+# Bumps version + generates CHANGELOG + tags a GitHub release on every
+# Conventional Commit push to main. Does NOT publish to any package registry
+# (release-type "simple" is for repos that don't ship a language package).
+# The version bump is mirrored into plugins/inspect-skills/.codex-plugin/plugin.json
+# so that Codex's version-keyed cache picks up new releases (Claude Code uses
+# the commit SHA as its implicit version and does not need a bumped field).
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5
