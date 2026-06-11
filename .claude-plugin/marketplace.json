@@ -13,7 +13,7 @@
         "name": "Meridian Labs"
       },
       "category": "development",
-      "source": "./",
+      "source": "./plugins/inspect-skills",
       "strict": false,
       "homepage": "https://github.com/meridianlabs-ai/inspect-skills"
     }

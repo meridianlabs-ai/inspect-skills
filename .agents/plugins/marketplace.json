@@ -1,0 +1,17 @@
+{
+  "name": "meridian",
+  "interface": {
+    "displayName": "Meridian Labs"
+  },
+  "plugins": [
+    {
+      "name": "inspect-skills",
+      "source": { "source": "local", "path": "./plugins/inspect-skills" },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
