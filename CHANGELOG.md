@@ -1,0 +1,26 @@
+# Changelog
+
+## [0.2.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.1.0...v0.2.0) (2026-06-12)
+
+
+### Features
+
+* add babysitting-evals skill and improve map-inspect-packages skill ([0b4e766](https://github.com/meridianlabs-ai/inspect-skills/commit/0b4e766e2dfe380087d885790b83d1fc56d1c366))
+* add map-inspect-packages skill ([a745e7e](https://github.com/meridianlabs-ai/inspect-skills/commit/a745e7ecd1e1dee99c20a0d6e295af9fcefa7526))
+* add native Codex support with unified plugin layout ([295d7b1](https://github.com/meridianlabs-ai/inspect-skills/commit/295d7b106dcc907c9f11bbef95873d80973a627d))
+* add reading-logs skill ([4bb65b5](https://github.com/meridianlabs-ai/inspect-skills/commit/4bb65b592916ab72e534f481e93498f0a5f4aefd))
+* distribute as a native Claude Code plugin marketplace ([1bd2e31](https://github.com/meridianlabs-ai/inspect-skills/commit/1bd2e3179a73ad1076654ff47519ce871c09c138))
+* refine babysitting-evals skill ([813bcc7](https://github.com/meridianlabs-ai/inspect-skills/commit/813bcc78d05325f8d27b518018aefd4de6a73da2))
+
+
+### Bug Fixes
+
+* address feedback ([0ee988b](https://github.com/meridianlabs-ai/inspect-skills/commit/0ee988b7039984da83cdc98697e5d295263d49e5))
+* use working JSON schema URL in marketplace.json ([0a3a707](https://github.com/meridianlabs-ai/inspect-skills/commit/0a3a707a8402bfca9912aca83de98f3884632146))
+
+
+### Documentation
+
+* clarify release flow and tighten PR-title-lint types ([3f250ba](https://github.com/meridianlabs-ai/inspect-skills/commit/3f250ba3abbe7f23f0e710337407b3b2bed9be98))
+* contributing guide + simplify changelog-sections to non-default entries ([8ae9789](https://github.com/meridianlabs-ai/inspect-skills/commit/8ae978925fcde00e864c2b519f2ef96ab08794b7))
+* correct Inspect Scout description in map-inspect-packages ([973fbe2](https://github.com/meridianlabs-ai/inspect-skills/commit/973fbe2ae6b186fc407ad3f0aa3fb9e6d08056cc))
