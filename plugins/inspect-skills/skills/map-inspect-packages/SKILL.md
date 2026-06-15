@@ -12,7 +12,7 @@ Inspect AI is an open-source Python framework for LLM evaluations. The core (`in
 | Package | Owns | Docs |
 |---|---|---|
 | **Inspect AI** | Core eval framework: `Task` / `Solver` / `Scorer` / datasets / models and providers / agents / tools / sandbox API / log and analysis APIs (`inspect_ai.log`, `inspect_ai.analysis`) / eval runners (`eval()`, `eval_set()`). | https://inspect.aisi.org.uk/llms.txt |
-| **Inspect Evals** | Community catalog of 130+ pre-built benchmark evals (GAIA, SWE-Bench, Cybench, MMLU, GPQA, …). Use these before writing your own. | https://ukgovernmentbeis.github.io/inspect_evals/index.html |
+| **Inspect Evals** | Community catalog of 130+ pre-built benchmark evals (GAIA, SWE-Bench, Cybench, MMLU, GPQA, …). Use these before writing your own. | https://ukgovernmentbeis.github.io/inspect_evals/llms.txt |
 | **Inspect Flow** | Declarative workflow orchestration: run many tasks × models × params at scale, with sweeps, defaults, and post-eval steps (`FlowSpec`, `FlowTask`). | https://meridianlabs-ai.github.io/inspect_flow/llms.txt |
 | **Inspect Scout** | In-depth analysis of AI agent transcripts via LLM, grep/pattern, or multi-agent scanners. Detects issues like refusals, misconfiguration, or evaluation awareness. Imports natively from Inspect logs, plus Arize Phoenix, LangSmith, Logfire, MLFlow, W&B Weave, Claude Code sessions, and arbitrary Arrow/Parquet/custom Python sources. | https://meridianlabs-ai.github.io/inspect_scout/llms.txt |
 | **Inspect Viz** | Data visualization for Inspect log dataframes: bar charts, line and scatter plots, scorer & sample heatmaps, radar plots, with interactive filtering and tables. | https://meridianlabs-ai.github.io/inspect_viz/llms.txt |
@@ -40,8 +40,10 @@ The table above is curated for the most-used packages. For the comprehensive eco
 
 **Keep packages aligned with the docs.** Check the user's installed version (`pip show <package>`) against the latest on PyPI. If it's older, propose upgrading (`pip install -U <package>`) so the features in the docs are actually available at runtime. If the user can't upgrade (pinned deps, monorepo constraints), flag the version gap.
 
-**Tip: `inspect.aisi.org.uk` markdown convention.** Any docs page on `inspect.aisi.org.uk` has a markdown variant: append `.html.md` to the URL (e.g. `https://inspect.aisi.org.uk/agents.html.md`). The HTML versions are JS-rendered and may return empty content to fetch tools; use the `.html.md` variant for reliable agent-readable content.
+**Tip: markdown variants for agent-readable docs.** HTML versions of these docs sites are JS-rendered and may return empty content to fetch tools; use the markdown variant instead.
+- `inspect.aisi.org.uk` pages: append `.html.md` (e.g. `https://inspect.aisi.org.uk/agents.html.md`).
+- `ukgovernmentbeis.github.io/inspect_evals` pages: append `.llms.md` (e.g. `https://ukgovernmentbeis.github.io/inspect_evals/evals/gpqa/index.llms.md`).
 
 ---
 
-Last reviewed: 2026-06-04 against inspect_ai v0.3.235
+Last reviewed: 2026-06-15 against inspect_ai v0.3.235
