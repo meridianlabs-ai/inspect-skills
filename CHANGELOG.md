@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.2.0...v0.3.0) (2026-06-16)
+
+
+### Features
+
+* point map-inspect-packages at inspect_evals llms.txt ([7c78192](https://github.com/meridianlabs-ai/inspect-skills/commit/7c78192fd170fbd5dc35be5cbd4dc50cc32b8d43))
+* point map-inspect-packages at inspect_evals llms.txt ([c5fd8d6](https://github.com/meridianlabs-ai/inspect-skills/commit/c5fd8d617d8c3fddd820efdfdb49b14c199e4b6b))
+
 ## [0.2.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.1.0...v0.2.0) (2026-06-12)
 
 
