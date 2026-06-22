@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.3.0...v0.3.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* document new ctl keep command and keep_alive field ([#20](https://github.com/meridianlabs-ai/inspect-skills/issues/20)) ([5215b1a](https://github.com/meridianlabs-ai/inspect-skills/commit/5215b1a3a19ee47d48df4712c70ad97fe4161b9a))
+* tier the polling cadence in babysitting-evals skill ([#19](https://github.com/meridianlabs-ai/inspect-skills/issues/19)) ([440d513](https://github.com/meridianlabs-ai/inspect-skills/commit/440d513cc8b120c25d152cdd4dd37c15d97bcb15))
+
 ## [0.3.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.2.0...v0.3.0) (2026-06-16)
 
 
