@@ -12,7 +12,7 @@ description: >-
 
 Every running `inspect eval` or `inspect eval-set` process binds a local control endpoint by default; `inspect ctl` talks to it so you can observe live evals from a separate shell. Users who pass `--ctl-server=false` opt out and aren't visible to `ctl`.
 
-> **In-progress feature, expect gaps.** The control channel is **read-only**: you observe via `ctl` and `release` finished processes, but you can't mutate a running eval through it. What's possible today to change a running eval:
+> **In-progress feature, expect gaps.** The control channel is **read-only for the eval itself**: you observe via `ctl`, and the only state you can mutate is the process's post-completion park (`keep` / `release`, see Commands). You can't change anything about the running eval. What's possible today to change a running eval:
 > - **Cancel an individual sample or task**: a **human**, from the eval's **TUI**.
 > - **Stop the whole eval/process**: the human (Ctrl+C), or you (`kill -INT <pid>`, after confirming with the user). Same graceful path as Ctrl+C: completed samples are scored and the log finalizes as `cancelled`. Don't use plain `kill` / SIGTERM; Inspect has no handler for it and unflushed samples are lost.
 
@@ -50,14 +50,15 @@ When the user explicitly asks you to **watch an eval over time** (vs. a one-off 
 - **Report only on meaningful change.** Dense internal polling does NOT mean talking to the user every minute. Polls are background context-gathering; surface to the user only on: new errors or retries, milestones (first sample done, 25/50/75% complete), suspected stalls, completion. A stream of "still running" messages is worse than silence.
 
 ## Commands
-Read-only commands today: `tasks`, `samples`, `sample`, `errors`, `events`, `release`. **Default to `--json` for all of these** when you're going to parse, filter, or compare output across polls; the human tables are summaries that hide fields and truncate.
+Today's surface: read commands `tasks`, `samples`, `sample`, `errors`, `events`, plus write commands `keep` and `release` that toggle the post-completion park (not the running eval). **Default to `--json` for all reads** when you're going to parse, filter, or compare output across polls; the human tables are summaries that hide fields and truncate.
 
-- `tasks`: running evals. The human table shows `task_id` / `task` / `samples` / `started`. `pid` / `log_location` / `last_activity_at` / `completed_at` are in `--json` only.
+- `tasks`: running evals. The human table shows `task_id` / `task` / `samples` / `started`, with a keep-alive footer (`on` / `off` / `mixed`). `pid` / `log_location` / `last_activity_at` / `completed_at` / `keep_alive` are in `--json` only.
 - `samples`: per-sample table (status, retries, score, time, tokens, and `idle` since last activity). `--active-since <ts>` gives a "what changed since I last looked" delta. `--json` exposes raw `last_activity_at` for delta math. A sample doesn't appear here until it has emitted at least one event, so a sample still in solver setup can be `in_flight` in `tasks` without showing up in `samples`; the polling rule above still applies (don't loop, come back to it when the user asks for an update).
 - `sample`: one sample's full attempt history (every retry, the final error).
 - `errors`: task-wide list of every sample that errored or was retried. The natural first call when babysitting ("did anything go wrong?").
 - `events`: a running sample's transcript events (`model` / `tool` / `error` / `score`) via cursored pull. The way to see *what a sample is actually doing*. Each call returns the envelope `{events, next, done}`. Page forward by passing the prior `next` back via `--since`. `--tail N` peeks at the latest; `--type` filters (comma-separated, `*` for all); `--full` returns raw events instead of the compact projection. `done: true` means the sample reached a terminal state. Pages are always contiguous from the cursor, so there's no silent-gap case to handle. Push, `--follow`, and SSE aren't shipped, so "immediate" means "within your poll interval".
-- `release`: free a finished `--ctl-server=keep-alive` process. Does NOT cancel anything.
+- `keep [--pid N]`: turn ON the post-completion park for a process launched WITHOUT `--ctl-server=keep` (canonical spelling; `keep-alive` is a legacy alias). The process will stay inspectable after its eval finishes instead of exiting. Does NOT change the running eval. Useful when you realize mid-run that you want to interrogate the eval after it completes.
+- `release [--pid N]`: turn OFF the post-completion park (or release a parked process so it exits). Does NOT cancel anything. `keep` and `release` are last-write-wins, so toggling either way mid-run is safe.
 
 ## Who launched it: the exact difference
 `ctl` works the same during the run either way. What differs is **two launch flags**, which decide who (if anyone) can intervene and whether the surface survives completion:
@@ -65,7 +66,7 @@ Read-only commands today: `tasks`, `samples`, `sample`, `errors`, `events`, `rel
 | | **User-launched** (interactively) | **You-launched** |
 |---|---|---|
 | Display / TUI | usually default `--display full`: the human has a TUI and can cancel a sample or task | you choose: `--display none` means no TUI and nobody can cancel a sample or task; or `tmux` + `--display full` lets the human attach and cancel |
-| `--ctl-server=keep-alive` | usually **omitted**: the process exits when the eval finishes and the `ctl` surface vanishes | optional; only if you want to interrogate the eval *after* it finishes (rare) |
+| `--ctl-server=keep` | usually **omitted**: the process exits when the eval finishes and the `ctl` surface vanishes | optional; only if you want to interrogate the eval *after* it finishes. Toggleable mid-run via `inspect ctl keep` / `release`, so missing it at launch isn't permanent. |
 | Config visibility | partial: `ctl tasks --json` gives `log_location` and `model`, ask the user for the rest | full: you picked `--log-dir`, `--ctl-server`, and display |
 | Stop the whole run | the human (Ctrl+C) | you (`kill -INT <pid>`, with their OK) |
 
@@ -123,21 +124,24 @@ Always confirm the user's intent on **`--continue-on-fail`**. Default is fail-fa
 Give the user a **summary**, not raw counts: per-model results, **outliers** (samples far slower or more tokens than the rest), and **flag that errors happened even if retries fixed them**. For **log files** (in-progress or finished), use the **`reading-logs`** skill. Prefer `read_eval_log(..., header_only=True)` and read sample detail selectively; `.eval` logs get large, and reading several at once can exhaust memory.
 
 ## `inspect-flow`
-If the user already has a Flow spec (a Python file describing an eval-set for [inspect-flow](https://meridianlabs-ai.github.io/inspect_flow/)), launch it with `flow run <path/to/spec.py>`. A Flow spec runs an `eval-set` under the hood, so everything in this skill applies: `ctl tasks` sees the run, all read commands work, and diagnosing stalls and errors is identical. One current caveat: `flow run` doesn't expose `--ctl-server=keep-alive`, so the `ctl` surface vanishes the moment flow exits. Fine for live monitoring; not yet usable for post-completion interrogation.
+If the user already has a Flow spec (a Python file describing an eval-set for [inspect-flow](https://meridianlabs-ai.github.io/inspect_flow/)), launch it with `flow run <path/to/spec.py>`. A Flow spec runs an `eval-set` under the hood, so everything in this skill applies: `ctl tasks` sees the run, all read commands work, and diagnosing stalls and errors is identical. One current caveat: `flow run` doesn't expose `--ctl-server=keep`, so the `ctl` surface vanishes the moment flow exits. Fine for live monitoring; not yet usable for post-completion interrogation.
 
 ## Cleanup at end of session
-Any process launched with `--ctl-server=keep-alive` parks after the eval finishes and waits **indefinitely** for `inspect ctl release`; it won't exit on its own. Track these yourself: if you launched anything with `--ctl-server=keep-alive` during the session, remember to release it before you wrap up.
+Any process with keep-alive set (`--ctl-server=keep` at launch, or `inspect ctl keep --pid` at runtime) parks after the eval finishes and waits **indefinitely** for `inspect ctl release`; it won't exit on its own. `tasks --json` reports the current intent in the `keep_alive` field per task (and an `on` / `off` / `mixed` footer on the human table), so spotting keep-alive processes is a one-liner:
 
-For runs you launched: ask the user if they're done interrogating, then release.
+```bash
+inspect ctl tasks --json | jq '.[] | select(.keep_alive) | {pid, task, completed_at}'
+```
+
+Before ending the babysitting session, sweep for keep-alive processes and ask the user if they're done interrogating each. Then release:
+
 ```bash
 inspect ctl release --pid <pid>
 ```
 
-For parked runs the user launched themselves: defer entirely. Don't release someone else's parked process unless they ask you to. There's no ownership check today, and `release` silently latches on a still-running eval to "exit when done", which would surprise them.
-
-If you didn't track which launches were keep-alive, you can still spot parked processes in `tasks --json`: an entry with `completed_at` set whose `pid` is still alive (visible in `ps`) is parked. A normal run's entry disappears as soon as the process exits.
+For parked runs the user launched themselves: defer entirely. Don't release someone else's parked process unless they ask you to. (`keep` and `release` are last-write-wins, so they could always re-`keep` if a release was premature, but it's still their intent to change.)
 
 ## Current limitations
-- **No `ctl` write ops.** The write surface today is **`inspect acp`**: it lets a human or an attached agent send a steering message, interrupt generation, cancel a tool call, or cancel a sample, even when the eval was launched headless. Enable on launch with `inspect eval[-set] --acp-server` (off by default). Attach from another shell with `inspect acp` (lists running ACP-enabled evals; pin one via `--task-id` / `--sample-id` / `--epoch`). Full surface: <https://inspect.aisi.org.uk/intervention.html>. This skill stays scoped to `ctl`; reach for ACP when the user wants to delegate the intervention rather than do it in their TUI.
+- **No `ctl` write ops on the running eval.** `ctl` can toggle the process's post-completion park (`keep` / `release`, see Commands) but can't change anything about the eval in flight. The write surface for the running eval today is **`inspect acp`**: it lets a human or an attached agent send a steering message, interrupt generation, cancel a tool call, or cancel a sample, even when the eval was launched headless. Enable on launch with `inspect eval[-set] --acp-server` (off by default). Attach from another shell with `inspect acp` (lists running ACP-enabled evals; pin one via `--task-id` / `--sample-id` / `--epoch`). Full surface: <https://inspect.aisi.org.uk/intervention.html>. This skill stays scoped to `ctl`; reach for ACP when the user wants to delegate the intervention rather than do it in their TUI.
 - **`events` is pull-only.** No push, `--follow`, or SSE yet; alerts are bounded by your poll interval (in practice, the time between assistant turns).
 - **No decoupled `inspect tui`.** For a detachable human view of an eval *you* launched, use `tmux` + `--display full` (above) or `inspect view start --log-dir <dir>` (a separate viewer; closing it doesn't halt the eval).
