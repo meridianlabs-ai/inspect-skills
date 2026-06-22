@@ -33,6 +33,22 @@ inspect ctl samples <task> --json   # for any task with errors, or to assess pro
 ```
 Then summarize: how many tasks are running, progress per task, anything errored or retried, anything obviously stalled. Poll on demand: when the user asks, when you need a second `last_activity_at` reading to confirm a possible stall, or when watching for a user-specified event. Don't background-poll a healthy eval.
 
+### Watching over time: tiered polling
+When the user explicitly asks you to **watch an eval over time** (vs. a one-off check), polling IS the task. Don't pick a fixed interval and don't default to "every 30 min". Stay dense at the start, sparse once steady, and anchor each phase on **state signals** rather than the clock: eval timescales vary by orders of magnitude.
+
+| Phase | Cadence | Anchor (from `tasks --json` + `samples --json`) |
+|---|---|---|
+| Spinup (provider auth, dataset fetch, sandbox build; where most failures live) | ~1 min | `samples.completed == 0` |
+| Mid-spinup (first samples done, `in_flight` still ramping) | ~5 min | `completed > 0`, `in_flight` not yet stable |
+| Steady state (`in_flight` stable, errors flat, samples advancing) | ~15-30 min | `in_flight` stable across at least two polls |
+| Near-end (closing reductions / scoring phase) | ~5 min | `completed / total > 0.9` |
+| Any error or retry change | snap back to ~1 min for the next poll or two, then resume the prior phase's cadence | `errored` or per-sample `retries` increased since the last poll |
+
+**Two principles alongside the cadence:**
+
+- **Adapt to the eval's timescale.** A 50-sample QA eval can finish inside the spinup window; a 200-sample agentic eval might spend 15 min before its first sample completes. Calibrate against the eval's actual progress, not the wall-clock numbers in the table.
+- **Report only on meaningful change.** Dense internal polling does NOT mean talking to the user every minute. Polls are background context-gathering; surface to the user only on: new errors or retries, milestones (first sample done, 25/50/75% complete), suspected stalls, completion. A stream of "still running" messages is worse than silence.
+
 ## Commands
 Read-only commands today: `tasks`, `samples`, `sample`, `errors`, `events`, `release`. **Default to `--json` for all of these** when you're going to parse, filter, or compare output across polls; the human tables are summaries that hide fields and truncate.
 
