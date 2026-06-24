@@ -5,6 +5,7 @@
   "repository": "https://github.com/meridianlabs-ai/inspect-skills",
   "license": "MIT",
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Inspect Skills",
     "shortDescription": "Skills for Inspect AI and its ecosystem",

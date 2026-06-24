@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "py-repl": {
+      "command": "uvx",
+      "args": [
+        "--from", "posit-mcp-repl==0.2.0",
+        "mcp-repl",
+        "--interpreter", "python",
+        "--sandbox", "workspace-write",
+        "--add-allowed-domain", "pypi.org",
+        "--add-allowed-domain", "files.pythonhosted.org",
+        "--oversized-output", "files"
+      ]
+    }
+  }
+}
