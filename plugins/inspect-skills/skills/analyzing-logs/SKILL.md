@@ -60,7 +60,7 @@ Custom columns inherit from `EvalColumn` / `SampleColumn` / `MessageColumn` / `E
 
 **Three traps to know about up front:**
 
-- **Score columns: single-scorer vs multi-scorer.** `samples_df` explodes scores into one column per scorer (`score_<scorer-name>`). For a one-scorer eval, group by that single column and aggregate. For multi-scorer / cross-scorer comparisons, prefer **`evals_df` with `EvalScores`** (gives you `score_headline_value` per log) and accept that you're averaging across scorers. Values can be strings (`'C'`/`'I'`), numbers, or nested dicts depending on the scorer; use `prepare(df, [score_to_float()])` to normalize.
+- **Score columns: single-scorer vs multi-scorer.** `samples_df` explodes scores into one column per scorer (`score_<scorer-name>`). For a one-scorer eval, group by that single column and aggregate. For multi-scorer / cross-scorer comparisons, prefer **`evals_df` with `EvalScores`** (gives you `score_headline_value` per log) and accept that you're averaging across scorers. Values can be strings (`'C'`/`'I'`), numbers, or nested dicts depending on the scorer; use `prepare(df, [score_to_float("score_headline_value")])` for eval headline scores, or pass the concrete sample score column(s) such as `score_<scorer-name>` when normalizing `samples_df`.
 - **pyarrow dtypes bite scalar comparisons.** `samples_df` returns columns with pyarrow-backed dtypes (`double[pyarrow]`, `large_string[pyarrow]`). Plain `df[col].isna()` works, but scalar `==` on `<NA>` raises `TypeError: boolean value of NA is ambiguous`. Use `pd.to_numeric(df[col], errors='coerce')` or `df[col].fillna(...)` before comparing.
 - **Status field canonical values.** `EvalLog.status ∈ {success, error, cancelled, started}`. `started` means the run crashed mid-execution (see `reading-logs` for `recoverable_eval_logs` recovery). Filter on these explicitly rather than guessing.
 
@@ -232,7 +232,7 @@ The PNG is embedded as a `display_data` output so the plot renders the moment th
 
 **Cells must be self-contained.** The REPL state is for *exploration* — variables built across many back-and-forth calls. The notebook is the *curated record* — someone should be able to Run All from a fresh kernel and reproduce. So when appending a cell, inline the imports it needs, the variables it references, and the paths it reads. If a piece of state was built across five exploratory blocks in the REPL, collapse it into one self-contained cell in the notebook.
 
-**What is and isn't captured.** Code and stdout. Not captured today: matplotlib figures, rich `display(df)` HTML, image outputs. The REPL itself only returns text, so the notebook can't be richer than the REPL's outputs. If the user wants plots, suggest they open the notebook in JupyterLab and re-run; `df.plot()` will render there.
+**What is and isn't captured.** Code, stdout, and saved PNG plots are captured. For plots, save the figure and pass the PNG via `--image-file`; the helper embeds it as `display_data` so it renders when the notebook opens. Not captured today: rich `display(df)` HTML or unsaved inline renders returned only by the REPL.
 
 ---
 
