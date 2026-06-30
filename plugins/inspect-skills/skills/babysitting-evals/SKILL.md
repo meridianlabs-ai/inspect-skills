@@ -129,12 +129,6 @@ When `max_samples` is high and each sample runs in its own Docker container (a c
 - `max_samples × per-container MB` should fit comfortably in available RAM with headroom. On a 32 GB Mac, ~50 light containers is fine; 5 heavy containers can already OOM.
 - Docker Desktop on macOS / Windows has its own resource cap (Settings → Resources). If `max_samples=20` and Docker is allocated 8 GB, the eval will thrash regardless of host RAM.
 
-**Symptoms of resource pressure mid-run**:
-- Stalls the per-event-type thresholds above can't explain (no in-flight event, just slow).
-- Sample errors mentioning `OCI runtime`, container creation timeouts, `no space left on device`, or sandbox health-check failures.
-- `kill -INT <pid>` cleanup taking much longer than usual (Docker daemon backlog).
-- Host becomes sluggish: type-lag in the user's terminal, fans spinning.
-
 **Quick host checks** when you suspect pressure:
 
 ```bash
