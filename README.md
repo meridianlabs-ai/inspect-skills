@@ -81,7 +81,7 @@ The `mcpServers` field in `.codex-plugin/plugin.json` registers the server with 
 default_tools_approval_mode = "approve"
 ```
 
-Codex doesn't auto-enable plugin-bundled MCPs by design. The `mcpServers` field in `.codex-plugin/plugin.json` registers the MCP at install time so `codex mcp list` knows about it, but the TOML block above is what actually enables it and sets the approval policy. Restart Codex (or start a fresh `codex` session) after editing the TOML. Verify with `codex mcp list`; `py-repl` should appear with status `enabled`. Both interactive `codex` and non-interactive `codex exec` work; no bypass flags needed.
+Restart Codex (or start a fresh `codex` session) after editing the TOML. Verify with `codex mcp list`; `py-repl` should appear with status `enabled`. Both interactive `codex` and non-interactive `codex exec` work; no bypass flags needed.
 
 To update: `codex plugin marketplace upgrade meridian` (Codex has no auto-update equivalent; updates are manual).
 
@@ -129,12 +129,11 @@ Restart your agent to pick up the new MCP server.
 
 ## Bundled MCP server
 
-The plugin bundles [`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl), a persistent Python REPL MCP server. The `analyzing-logs` skill uses it for two things:
-
-- **Keeping eval-log dataframes in memory** across follow-up questions, so the agent doesn't re-read your `logs/` directory on every turn.
-- **Rendering `matplotlib` plots inline** for vision-capable models (text-only models get file paths).
+The plugin bundles [`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl), a persistent Python REPL MCP server. The `analyzing-logs` skill uses it to **keep eval-log dataframes in memory** across follow-up questions, so the agent doesn't re-read your `logs/` directory on every turn.
 
 Worth setting up if you analyze many or large logs and ask several questions in a row; skip it otherwise — the skill falls back to stateless reads. The MCP runs arbitrary Python, so only enable it in environments where you're comfortable with that.
+
+**Subagents and the bundled REPL.** Subagents spawned via the Task / Agent tool inherit the REPL through the deferred-tool channel, loaded on demand via `ToolSearch`. Wildcard (`tools: *`) and exclusion-style agent declarations inherit it fine. A custom agent pinned to an enumerated `tools:` allowlist must include `ToolSearch` (or use `tools: *`) to reach it — an enumerated list that omits `ToolSearch` gets no deferred-tools channel at all, which is the only path that loads the bundled MCP's schema.
 
 ### Prerequisites
 

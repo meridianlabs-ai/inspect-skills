@@ -13,7 +13,7 @@ description: >-
 
 # Analyzing Inspect eval logs
 
-Use this skill when the user asks **questions about what happened** in one or more eval logs, vs. one-off reading or live monitoring. The first job is to pick the right tool for the question; the second is to apply it.
+Use this skill when the user asks **questions about what happened** in one or more eval logs. The first job is to pick the right tool for the question; the second is to apply it.
 
 ## Pick the right tool
 
@@ -84,7 +84,7 @@ If ambiguous, ask. Don't guess.
 
 ## Keeping logs in memory across questions
 
-When the user is going to ask several follow-up questions about the same log (or a small set of logs), don't re-read on every turn. Set up **persistent state** via a Python REPL MCP, i.e. a tool that keeps a Python interpreter alive across calls so variables you define in one call are still there in the next.
+When the user is going to ask several follow-up questions about the same log (or a set of logs), don't re-read on every turn. Set up **persistent state** via a Python REPL MCP, i.e. a tool that keeps a Python interpreter alive across calls so variables you define in one call are still there in the next.
 
 **When to set this up:**
 
@@ -94,7 +94,7 @@ When the user is going to ask several follow-up questions about the same log (or
 
 For a one-shot question on a small log, skip this; reload is cheaper than setup.
 
-**How to do it.** This plugin bundles a persistent Python REPL MCP server ([`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl)). On Claude Code the canonical server name is `plugin:inspect-skills:py-repl` (namespaced because plugin-bundled MCPs use a `plugin:<plugin-name>:<server-name>` prefix). Two tools:
+**How to do it.** This plugin bundles a persistent Python REPL MCP server ([`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl)). The server name depends on the agent: on Claude Code it's `plugin:inspect-skills:py-repl` (namespaced because plugin-bundled MCPs use a `plugin:<plugin-name>:<server-name>` prefix); on Codex it's registered flat as `py-repl` (no plugin prefix, as shown by `codex mcp list`) and the tools are invoked by their bare names. Two tools:
 
 - `repl`, args: `input` (the Python source to run, as a string) and optional `timeout_ms`. State persists across calls. Plots from `matplotlib` etc. are returned as inline images when the client model is vision-capable; otherwise as file paths. Smart-echo suppresses redundant stdout. The session runs in an OS-level sandbox at the `workspace-write` policy: reads broadly, writes only inside the workspace, network restricted to allowlisted PyPI domains (`pypi.org`, `files.pythonhosted.org`) so the dep-bootstrap can `pip install` but the REPL can't otherwise reach the network.
 - `repl_reset`, no args. Restarts the backend session and clears all in-memory state. **Don't call this mid-session** — it wipes the dataframes you've been building up. Reach for it only if the user explicitly wants a clean slate, or if the worker has wedged and you need a fresh start.
@@ -132,10 +132,10 @@ If `inspect_ai` is already on the user's Python, the loop is a no-op (each `__im
 - **Codex**: the MCP is bundled but may be either disabled in config or lazy-loaded rather than listed up front. Try the `tool_search` discovery step below first; if discovery still doesn't expose the tool, point the user at the README for the enable step.
 - **Other agents installed via `npx skills add`** (Cursor, GitHub Copilot, Windsurf, Cline): the MCP isn't auto-registered. Point the user at the plugin README's per-agent JSON snippets (the one they paste depends on the agent — VS Code Copilot's schema is different from the rest). They restart their agent to pick it up.
 
-**Always verify the `repl` tool is visible to you before relying on it.** Check that `repl` (or its agent-specific name) is listed in your toolkit. In Codex, MCP tools may be lazy-loaded rather than shown up front: if `tool_search` is available, search for `py-repl repl inspect skills mcp python` before concluding the REPL is unavailable. If the tool still isn't visible after discovery, fall back to the stateless pattern below; don't block the analysis on getting the MCP set up. Common reasons the tool won't be visible:
+If the tool still isn't visible after discovery, fall back to the stateless pattern below; don't block the analysis on getting the MCP set up. Common reasons the tool won't be visible:
 
 - The user is on an agent we don't have a recipe for, or they prefer a different REPL MCP, or the bundled MCP just isn't installed in their config.
-- **You're running as a subagent in Claude Code.** Plugin-bundled MCPs do not propagate to subagents spawned via the Task / Agent tool today ([upstream Claude Code limitation](https://github.com/anthropics/claude-code/issues/7296)). If you've been delegated analysis work as a subagent, assume the MCP is unavailable and use stateless reads. If the parent agent needs persistent state, it should do the analysis itself, not delegate it.
+- **You're running as a subagent in Claude Code with a restricted `tools:` allowlist.** The bundled REPL reaches subagents only through the deferred-tool channel, loaded on demand via `ToolSearch`. Subagents with a wildcard (`tools: *`) or exclusion-style `tools:` declaration inherit it fine. But an agent defined with an *enumerated-include* `tools:` list that omits `ToolSearch` gets no deferred-tools list and no `ToolSearch` at all, so there's no channel to load the REPL schema and the MCP is unreachable. If that's you, either add `ToolSearch` (or use `tools: *`) to the agent definition, or fall back to the stateless reads below. If the parent needs persistent state, it can also just do the analysis itself rather than delegating to a tools-restricted subagent.
 
 The pattern with the MCP available (after the dep-bootstrap above):
 
@@ -165,8 +165,6 @@ The question:
 Two options:
 - **Yes, capture to a notebook** — proceed with the setup below.
 - **No, just the analysis** — skip capture; any persistent REPL state still works for follow-up questions during this session.
-
-**Default is off. Surfacing is required; setup is opt-in.** Do not run `find`, `init`, or any other capture step until the user explicitly opts in. It's fine to start the analysis while waiting for the answer — a soft offer ("for now I'll proceed") is not consent.
 
 **Find the helper script** (shipped inside this skill's directory). If multiple copies exist across plugin caches, pick the newest by mtime:
 
