@@ -120,6 +120,32 @@ Always confirm the user's intent on **`--continue-on-fail`**. Default is fail-fa
 - **User-defined event-stream watches**: `ctl events` lets you watch *what a sample is doing*. If the user gave a specific goal ("watch for X"), watch for it; otherwise don't proactively ask unless the eval looks weird. Examples worth flagging when relevant: **repetition / "submit loops"** (an agent repeatedly sending the same `submit` *message* instead of calling the `submit` *tool*, so it never submits and burns tokens), unintended shortcut solutions, particular tool-call arguments, signs of reward hacking, or progress toward a stated goal. Watch via `ctl events <task> <sid> --since <cursor> --json`.
   - **Be faithful about confidence.** Some of these you can flag reliably (a literally repeated call); most you can only weakly infer and may lack context to judge. Say so: label low-confidence signals as such, tell the user what you can and can't detect rather than over-claiming, and point them to the sample (TUI) to judge and act.
 
+## Resource constraints with Docker sandboxes
+When `max_samples` is high and each sample runs in its own Docker container (a common pattern for code- or agent-evals), local resources become the bottleneck before the model does.
+
+**Pre-launch sanity check**: if the user is setting `max_samples > ~10` with a Docker sandbox, surface the math before launch.
+
+- Each container carries Inspect overhead plus the task's runtime (Python, tools, model client). Roughly 200-500 MB resident per container is typical; more for tasks that pull in heavy libraries or build code.
+- `max_samples × per-container MB` should fit comfortably in available RAM with headroom. On a 32 GB Mac, ~50 light containers is fine; 5 heavy containers can already OOM.
+- Docker Desktop on macOS / Windows has its own resource cap (Settings → Resources). If `max_samples=20` and Docker is allocated 8 GB, the eval will thrash regardless of host RAM.
+
+**Quick host checks** when you suspect pressure:
+
+```bash
+docker stats --no-stream                              # CPU / mem / I/O per container
+docker ps --filter "label=inspect"                    # any zombie containers?
+# macOS:
+vm_stat | awk '/Pages free/ {print "free:", $3 * 4096 / 1024 / 1024, "MB"}'
+# Linux:
+free -m | head -2
+```
+
+**Remediation patterns** (recommend; don't act unilaterally):
+- **Drop `max_samples`**: the simplest dial. Smaller value = fewer concurrent containers = less pressure.
+- **Increase Docker Desktop's memory/CPU allocation** (macOS / Windows). Often the actual cap.
+- **Switch to a remote sandbox** (`inspect_sandboxes`, k8s, Proxmox); see `map-inspect-packages` for routing.
+- **Add `--time-limit`** per sample so a stuck container can't hold resources indefinitely.
+
 ## Reading results and summarizing
 Give the user a **summary**, not raw counts: per-model results, **outliers** (samples far slower or more tokens than the rest), and **flag that errors happened even if retries fixed them**. For **log files** (in-progress or finished), use the **`reading-logs`** skill. Prefer `read_eval_log(..., header_only=True)` and read sample detail selectively; `.eval` logs get large, and reading several at once can exhaust memory.
 

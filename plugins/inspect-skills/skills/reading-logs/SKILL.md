@@ -5,6 +5,8 @@ description: Use whenever the user needs to read, inspect, or process Inspect AI
 
 # Reading Inspect Eval Logs
 
+This skill covers reading a **single log file** (or one of its samples) via `inspect_ai.log`. For cross-log work (dataframes across samples or runs) or transcript pattern detection, see the **`analyzing-logs`** skill first; it routes among `inspect_ai.log`, `inspect_ai.analysis`, and Inspect Scout based on the question.
+
 **ALWAYS fetch and read https://inspect.aisi.org.uk/eval-logs.html.md before doing any work that involves reading Inspect log files.** The log-reading API is specific to Inspect AI and these docs are the source of truth. Do not skip this step, even if you think you know the API.
 
 ## The right API: `inspect_ai.log`
@@ -179,15 +181,16 @@ Reach for tracing when:
 
 ## Quick decision tree
 
+Single-log questions only. Cross-log aggregates / transcript patterns route through the **`analyzing-logs`** skill.
+
 - "What model/task/config was this run?" → `read_eval_log(path, header_only=True)`
 - "Which samples failed or scored low?" → `read_eval_log_sample_summaries(path)` + filter by `s.error` / `s.scores`
 - "Show me sample 42 in detail" → `read_eval_log_sample(path, id=42)`
 - "Process every sample in this log" → `for s in read_eval_log_samples(path): ...`
-- "Compare configs across N log files" → `for log in list_eval_logs(dir): read_eval_log(log, header_only=True)` (safe even for many files since headers are small)
 - "Why did the eval fail?" → header status/error first, then sample summaries for `s.error is not None`, then `read_eval_log_sample` on offenders for traceback + `sample.events`
 - "What transient errors happened during the run?" → trace logs: `inspect trace http --failed` / `inspect trace anomalies --all`
 - "Eval crashed, can I recover unflushed samples?" → `recoverable_eval_logs(dir)` to find candidates, then `recover_eval_log(path)` on each (automatic with `eval_set()`)
-- "Search transcripts for patterns across many logs" → this is **Inspect Scout** territory, not raw log reading
+- "Compare or aggregate across multiple log files" / "search transcripts for patterns" → out of scope here; see the **`analyzing-logs`** skill
 
 ---
 
