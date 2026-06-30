@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.3.1...v0.4.0) (2026-06-30)
+
+
+### Features
+
+* add analyzing-logs skill with bundled persistent-Python-REPL MCP ([#22](https://github.com/meridianlabs-ai/inspect-skills/issues/22)) ([4743d7d](https://github.com/meridianlabs-ai/inspect-skills/commit/4743d7da7232cc858de77c12e32aff382b5ae0e8))
+
 ## [0.3.1](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.3.0...v0.3.1) (2026-06-22)
 
 
