@@ -150,21 +150,29 @@ samples = list(read_eval_log_samples("logs/run.eval", all_samples_required=False
 [s for s in samples if s.error is not None]
 ```
 
-## Capturing the analysis to a runnable notebook (opt-in)
+## Capturing the analysis to a runnable file (opt-in)
 
-Exploratory analysis can leave the user with no durable artifact when the session ends. Offer an opt-in record: a `.ipynb` they can open in JupyterLab, re-run from a fresh kernel, and keep.
+Exploratory analysis can leave the user with no durable artifact when the session ends. Offer an opt-in record they can re-run from scratch and keep.
 
-For any **multi-turn or exploratory log-analysis session**, surface the notebook-capture option before or alongside the first substantive analysis step. This applies whether you use a persistent REPL MCP or fall back to stateless shell/Python commands. Do not skip this just because the REPL tool is unavailable.
+For any **multi-turn or exploratory log-analysis session**, surface the capture option before or alongside the first substantive analysis step. This applies whether you use a persistent REPL MCP or fall back to stateless shell/Python commands. Do not skip this just because the REPL tool is unavailable.
 
-**Ask via your agent's structured-question tool** (e.g., `AskUserQuestion` in Claude Code) when available. Don't bury the offer in a planning message, and don't pair the question with your own decision in the same message — phrasing like "I'll leave it off for now and continue" makes the user think the choice is already made and they often won't react. State the question on its own; if your agent can't pause for a reply, begin the analysis without capture (capture is off by default until the user explicitly opts in — they can say yes any later turn). If your agent doesn't expose a structured-question tool, ask a standalone, clearly-formatted yes/no question instead.
+**Ask via your agent's structured-question tool** (e.g., `AskUserQuestion` in Claude Code) when available. Don't bury the offer in a planning message, and don't pair the question with your own decision in the same message — phrasing like "I'll leave it off for now and continue" makes the user think the choice is already made and they often won't react. State the question on its own; if your agent can't pause for a reply, begin the analysis without capture (capture is off by default until the user explicitly opts in — they can say yes any later turn). If your agent doesn't expose a structured-question tool, ask a standalone, clearly-formatted question instead.
 
 The question:
 
-> "Want me to capture this analysis to a runnable notebook you can keep? I'll write an `inspect-analysis-<timestamp>.ipynb` in the working directory with one self-contained cell per meaningful step."
+> "Want me to capture this analysis to a file you can keep and re-run? I can write a **Python script** (`.py`, runs end-to-end with `python …`), a **Jupyter notebook** (`.ipynb`, opens in JupyterLab with inline output), or skip it."
 
-Two options:
-- **Yes, capture to a notebook** — proceed with the setup below.
-- **No, just the analysis** — skip capture; any persistent REPL state still works for follow-up questions during this session.
+Three options:
+- **Python script (`.py`)** *(default)* — a cleaned-up, linear script named `inspect-analysis-<timestamp>.py` that runs top-to-bottom from a fresh interpreter. Imports at the top, one commented section per keeper step, plots as `plt.savefig(...)`. Diffs cleanly in git, needs no Jupyter, and re-running it regenerates every result. Prefer this unless the user asks for a notebook.
+- **Jupyter notebook (`.ipynb`)** — cells with captured stdout and inline plots, for users who live in JupyterLab.
+- **No file** — skip capture; any persistent REPL state still works for follow-up questions during this session.
+
+Whichever format they pick, two principles hold for both:
+
+- **Keepers only.** Skip throwaway exploration (`print(dir(thing))` to figure out an API, error tracebacks you worked around, type-probe calls). Keep the steps that move the user's question forward.
+- **Don't claim to have written something without actually running the tool call.** The most common failure mode is writing "captured that step" or "appended this as a cell" in your message *without* the underlying file-write / `append` call. If you state something landed, the matching tool call must appear in the same turn. If you're not sure whether it ran, read the file back before saying "done."
+
+### If they pick a notebook (`.ipynb`)
 
 **Find the helper script** (shipped inside this skill's directory). If multiple copies exist across plugin caches, pick the newest by mtime:
 
@@ -183,7 +191,7 @@ NB=$(python3 "$APPEND" init)
 
 **Append at natural pause points, in batches.** End of a logical step, end of a turn, before you summarise a finding — that's when you append. One Bash with several `cat <<EOF` + `append` invocations is cleaner than a separate Bash after every `repl` call, and it lets you pick keepers with hindsight (you'll know which exploratory blocks led somewhere useful).
 
-**Don't claim to have appended without actually running the command.** The most common failure mode here is writing "I'll capture this to the notebook" or "appended this as a new cell" in your message *without* the underlying `python3 "$APPEND" append ...` tool call. If you state in your reply that something was appended, the matching `append` invocation must appear as a tool call in the same turn. If you're not sure whether you ran it, list the notebook cells (read the `.ipynb` with your file-read tool, or `python3 -c 'import json; print(len(json.load(open("'"$NB"'"))["cells"]))'`) before saying "done."
+**Verify cells actually landed.** Per the keepers-only / don't-claim-without-running rule above, the `append` here is the tool call that must appear in the same turn as any "appended this as a cell" claim. If you're not sure whether it ran, list the notebook cells (read the `.ipynb` with your file-read tool, or `python3 -c 'import json; print(len(json.load(open("'"$NB"'"))["cells"]))'`) before saying "done."
 
 Use `mktemp -d` for the temp files so they're per-session (no name collisions across analysis sessions on the same machine, and not world-readable in shared `/tmp`):
 
@@ -204,8 +212,6 @@ CODE
 
 rm -rf "$TMP"   # clean up at end of batch
 ```
-
-Skip throwaway exploration (`print(dir(thing))` to figure out an API, error tracebacks you worked around, type-probe calls). Keep cells that move the user's question forward.
 
 **Capture plots inline.** When a `repl` call produces a plot, save the figure to a PNG inside your `repl` code before calling `plt.show()`, then pass it to `append` via `--image-file`. Two small habits matter:
 
