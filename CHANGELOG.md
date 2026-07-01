@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.0...v0.4.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **analyzing-logs:** offer .py script as default analysis-capture format ([#25](https://github.com/meridianlabs-ai/inspect-skills/issues/25)) ([699e2b4](https://github.com/meridianlabs-ai/inspect-skills/commit/699e2b41db53759e7ce8636d2dcbc9dd0f44174d))
+
 ## [0.4.0](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.3.1...v0.4.0) (2026-06-30)
 
 
