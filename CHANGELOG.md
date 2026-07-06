@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.1...v0.4.2) (2026-07-06)
+
+
+### Bug Fixes
+
+* **babysitting-evals:** document flush/buffer, event-loop starvation, and self-scheduled polling ([#28](https://github.com/meridianlabs-ai/inspect-skills/issues/28)) ([bb3d611](https://github.com/meridianlabs-ai/inspect-skills/commit/bb3d611a9ab4a85f85f2531f161bcf9e7501c06a))
+
 ## [0.4.1](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.0...v0.4.1) (2026-07-01)
 
 
