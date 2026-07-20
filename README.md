@@ -51,12 +51,6 @@ The snippet is self-contained: `enabledPlugins` is what actually installs and en
 
 Alternatively, toggle auto-update on from `/plugin` > Marketplaces. To update manually instead: `/plugin marketplace update meridian` then `/reload-plugins`.
 
-#### Skills not loading?
-
-- Check `/plugin` > Installed (or run `claude plugin list` in a terminal): `inspect-skills@meridian` should show as enabled. If it's missing, run the two install commands above; if it's disabled, run `claude plugin enable inspect-skills@meridian`.
-- After updating the marketplace, run `/reload-plugins` (or start a new session) so the new skill versions are picked up.
-- If you only added `extraKnownMarketplaces` to settings, nothing is installed yet: add `enabledPlugins` as in the auto-update snippet above, or run `/plugin install inspect-skills@meridian`.
-
 #### Optional: skip per-call permission prompts on the MCP
 
 To allowlist the bundled MCP's tools and skip the permission prompt that fires on every tool call, add to `~/.claude/settings.json` (user-wide) or `.claude/settings.json` / `.claude/settings.local.json` (repo-local):
