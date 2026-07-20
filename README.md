@@ -48,8 +48,7 @@ To allowlist the bundled MCP's tools and skip the permission prompt that fires o
 {
   "permissions": {
     "allow": [
-      "mcp__plugin_inspect-skills_py-repl__repl",
-      "mcp__plugin_inspect-skills_py-repl__repl_reset"
+      "mcp__plugin_inspect-skills_py-repl__repl"
     ]
   }
 }
@@ -100,7 +99,7 @@ This installs all four skills. `-y` runs non-interactively; add `--skill <skill-
   "mcpServers": {
     "py-repl": {
       "command": "uvx",
-      "args": ["--from", "posit-mcp-repl==0.2.0", "mcp-repl", "--interpreter", "python", "--sandbox", "workspace-write", "--add-allowed-domain", "pypi.org", "--add-allowed-domain", "files.pythonhosted.org", "--oversized-output", "files"]
+      "args": ["--from", "posit-mcp-repl==0.3.0", "mcp-repl", "--interpreter", "python", "--sandbox", "workspace-write", "--add-allowed-domain", "pypi.org", "--add-allowed-domain", "files.pythonhosted.org", "--oversized-output", "files"]
     }
   }
 }
@@ -119,7 +118,7 @@ Per-agent config file location:
     "py-repl": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["--from", "posit-mcp-repl==0.2.0", "mcp-repl", "--interpreter", "python", "--sandbox", "workspace-write", "--add-allowed-domain", "pypi.org", "--add-allowed-domain", "files.pythonhosted.org", "--oversized-output", "files"]
+      "args": ["--from", "posit-mcp-repl==0.3.0", "mcp-repl", "--interpreter", "python", "--sandbox", "workspace-write", "--add-allowed-domain", "pypi.org", "--add-allowed-domain", "files.pythonhosted.org", "--oversized-output", "files"]
     }
   }
 }
