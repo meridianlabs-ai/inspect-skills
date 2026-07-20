@@ -28,17 +28,28 @@ This installs all four skills. The bundled MCP server is registered and starts o
 
 #### Auto-update (recommended)
 
-Third-party marketplaces are manual-update by default. To get our changes automatically (every push to `main` lands in your next Claude Code session), toggle auto-update on for the `meridian` marketplace from `/plugin` > Marketplaces, or add to your `~/.claude/settings.json`:
+Third-party marketplaces are manual-update by default. To get our changes automatically (every push to `main` lands in your next Claude Code session), copy-paste this into your `~/.claude/settings.json` (user-wide) or a repo's `.claude/settings.json` (shared: everyone who opens that repo gets the skills, without running the install commands):
 
 ```json
 {
   "extraKnownMarketplaces": {
-    "meridian": { "autoUpdate": true }
+    "meridian": {
+      "source": {
+        "source": "github",
+        "repo": "meridianlabs-ai/inspect-skills"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "inspect-skills@meridian": true
   }
 }
 ```
 
-To update manually instead: `/plugin marketplace update meridian` then `/reload-plugins`.
+The snippet is self-contained: `enabledPlugins` is what actually installs and enables the plugin at session start, while `extraKnownMarketplaces` registers the marketplace and turns on auto-update. Registering the marketplace alone (in the UI or in settings) installs **nothing** by itself.
+
+Alternatively, toggle auto-update on from `/plugin` > Marketplaces. To update manually instead: `/plugin marketplace update meridian` then `/reload-plugins`.
 
 #### Optional: skip per-call permission prompts on the MCP
 
