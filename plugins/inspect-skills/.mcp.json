@@ -3,7 +3,7 @@
     "py-repl": {
       "command": "uvx",
       "args": [
-        "--from", "posit-mcp-repl==0.2.0",
+        "--from", "posit-mcp-repl==0.3.0",
         "mcp-repl",
         "--interpreter", "python",
         "--sandbox", "workspace-write",

@@ -94,22 +94,11 @@ When the user is going to ask several follow-up questions about the same log (or
 
 For a one-shot question on a small log, skip this; reload is cheaper than setup.
 
-**How to do it.** This plugin bundles a persistent Python REPL MCP server ([`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl)). The server name depends on the agent: on Claude Code it's `plugin:inspect-skills:py-repl` (namespaced because plugin-bundled MCPs use a `plugin:<plugin-name>:<server-name>` prefix); on Codex it's registered flat as `py-repl` (no plugin prefix, as shown by `codex mcp list`) and the tools are invoked by their bare names. Two tools:
+**How to do it.** This plugin bundles a persistent Python REPL MCP server ([`posit-dev/mcp-repl`](https://github.com/posit-dev/mcp-repl)). The server name depends on the agent: on Claude Code it's `plugin:inspect-skills:py-repl` (namespaced because plugin-bundled MCPs use a `plugin:<plugin-name>:<server-name>` prefix); on Codex it's registered flat as `py-repl` (no plugin prefix, as shown by `codex mcp list`) and the tool is invoked by its bare name. One tool:
 
-- `repl`, args: `input` (the Python source to run, as a string) and optional `timeout_ms`. State persists across calls. Plots from `matplotlib` etc. are returned as inline images when the client model is vision-capable; otherwise as file paths. Smart-echo suppresses redundant stdout. The session runs in an OS-level sandbox at the `workspace-write` policy: reads broadly, writes only inside the workspace, network restricted to allowlisted PyPI domains (`pypi.org`, `files.pythonhosted.org`) so the dep-bootstrap can `pip install` but the REPL can't otherwise reach the network.
-- `repl_reset`, no args. Restarts the backend session and clears all in-memory state. **Don't call this mid-session** — it wipes the dataframes you've been building up. Reach for it only if the user explicitly wants a clean slate, or if the worker has wedged and you need a fresh start.
+- `repl`, args: `input` (the Python source to run, as a string) and optional `timeout_ms`. State persists across calls. Multi-line input runs as a complete cell, so `def` / `for` / `if` blocks execute as-is with no special termination. Plots from `matplotlib` etc. are returned as inline images when the client model is vision-capable; otherwise as file paths. Smart-echo suppresses redundant stdout. The session runs in an OS-level sandbox at the `workspace-write` policy: reads broadly, writes only inside the workspace, network restricted to allowlisted PyPI domains (`pypi.org`, `files.pythonhosted.org`) so the dep-bootstrap can `pip install` but the REPL can't otherwise reach the network.
 
-**Always end multi-line `repl` inputs with `\n\n`.** Posit's REPL runs in line-mode and waits for a trailing blank line to evaluate indented blocks (`def`, `for`, `if`, `class`, etc.) — without it the REPL stays in continuation mode and your *next* `repl` call gets fed in as more lines of the unterminated block. Always append `\n\n` to any `input` containing indented code. Single-statement inputs (`x = 1`, `print(x)`) don't need it but it's harmless to include. If you see "continuation"-style behavior or the REPL seems to ignore your input, send a single `\n\n` to flush the pending block — don't reach for `repl_reset` since that wipes state.
-
-**Or wrap multi-line code in `exec(r'''...''')` to sidestep line-mode entirely.** Triple-quoted raw string + `exec` makes the whole block a single Python statement from the REPL's POV, so there's no continuation to terminate and no `\n\n` to remember. Slight visual noise, but it eliminates the class of bug. Both patterns are fine — pick whichever reads better per call:
-
-```python
-exec(r'''
-import pandas as pd
-for col in df.columns:
-    print(col, df[col].dtype)
-''')
-```
+**Resetting the session.** There is no separate reset tool: send a `repl` call whose `input` starts with the EOF character `\x04` (Ctrl-D) and the server restarts the backend session, clearing all in-memory state (it replies "new session started"). **Don't do this mid-session** — it wipes the dataframes you've been building up. Reach for it only if the user explicitly wants a clean slate, or if the worker has wedged and you need a fresh start.
 
 **Bootstrap dependencies on the first call.** `posit-mcp-repl` uses whatever Python interpreter it discovers (nearest `.venv` walking up from cwd, then `python3` on PATH). It does not manage its own package environment. So your first `repl` call should ensure `inspect-ai`, `pandas`, and `pyarrow` are importable, and `pip install` them if they're not:
 
@@ -123,8 +112,6 @@ for pkg, mod in [("inspect-ai==0.3.241", "inspect_ai"),
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", pkg])
 ```
-
-When sending this to `repl`, **the `input` string must end with `\n\n`** — it contains an indented `for` block, and Posit's line-mode REPL needs the trailing blank line to evaluate. (Same rule applies to every multi-line block you send.)
 
 If `inspect_ai` is already on the user's Python, the loop is a no-op (each `__import__` succeeds, no install). Otherwise it installs the three pinned versions into whatever environment Posit discovered. This only runs once per session — subsequent `repl` calls reuse the loaded modules.
 
