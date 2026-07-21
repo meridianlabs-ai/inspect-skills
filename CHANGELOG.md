@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.3](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.2...v0.4.3) (2026-07-21)
+
+
+### Bug Fixes
+
+* **analyzing-logs:** update bundled REPL to mcp-repl 0.3.0 ([#35](https://github.com/meridianlabs-ai/inspect-skills/issues/35)) ([0e9938f](https://github.com/meridianlabs-ai/inspect-skills/commit/0e9938fcb2862043b34209c5de829bda75257ea3))
+* **babysitting-evals:** update skill for the inspect ctl noun-group surface ([#36](https://github.com/meridianlabs-ai/inspect-skills/issues/36)) ([7c20a2c](https://github.com/meridianlabs-ai/inspect-skills/commit/7c20a2ccc6bbab6e86776c7035045823582f4d76))
+
+
+### Documentation
+
+* **readme:** make plugin enablement explicit for Claude Code installs ([#34](https://github.com/meridianlabs-ai/inspect-skills/issues/34)) ([62160bc](https://github.com/meridianlabs-ai/inspect-skills/commit/62160bc0fa204c199071673731ccb35e6bf06896))
+
 ## [0.4.2](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.1...v0.4.2) (2026-07-06)
 
 
