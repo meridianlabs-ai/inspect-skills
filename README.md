@@ -11,7 +11,7 @@ This is a single plugin that bundles four skills. Installing it gets you all fou
 | [`map-inspect-packages`](plugins/inspect-skills/skills/map-inspect-packages/SKILL.md) | Starting work in the Inspect AI ecosystem. Picks the right package for a given task and points at its docs. |
 | [`reading-logs`](plugins/inspect-skills/skills/reading-logs/SKILL.md) | Reading, inspecting, or processing Inspect AI eval log files (`.eval` or `.json`). Covers the `inspect_ai.log` API and memory-safe patterns. |
 | [`analyzing-logs`](plugins/inspect-skills/skills/analyzing-logs/SKILL.md) | Analyzing what happened in evals or samples. Routes between `inspect_ai.log` (single log), `inspect_ai.analysis` (cross-log dataframes), and Inspect Scout (transcript patterns). |
-| [`babysitting-evals`](plugins/inspect-skills/skills/babysitting-evals/SKILL.md) | Monitoring and diagnosing running Inspect AI evals via `inspect ctl` (the read-only control-channel CLI). Covers stall diagnosis, error triage, launch-and-watch workflows, and graceful stops. |
+| [`babysitting-evals`](plugins/inspect-skills/skills/babysitting-evals/SKILL.md) | Monitoring, diagnosing, and intervening in running Inspect AI evals via `inspect ctl` (the control-channel CLI). Covers stall diagnosis, error triage, launch-and-watch workflows, sample/task cancellation, and live config retuning. |
 
 The plugin also ships an optional Python REPL MCP server used by `analyzing-logs` for keeping eval-log dataframes in memory across follow-up questions. Skip the MCP setup steps below if you don't need it; see [Bundled MCP server](#bundled-mcp-server) for what it does and when it helps.
 
