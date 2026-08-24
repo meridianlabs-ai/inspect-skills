@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.3...v0.4.4) (2026-08-24)
+
+
+### Bug Fixes
+
+* **babysitting-evals:** cover the inspect ctl surface through 0.3.260 ([#39](https://github.com/meridianlabs-ai/inspect-skills/issues/39)) ([90fd382](https://github.com/meridianlabs-ai/inspect-skills/commit/90fd38298f2762a9ee4b6ac9f0fad38650b5f515))
+
 ## [0.4.3](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.2...v0.4.3) (2026-07-21)
 
 
