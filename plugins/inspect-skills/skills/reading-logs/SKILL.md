@@ -184,6 +184,7 @@ Reach for tracing when:
 Single-log questions only. Cross-log aggregates / transcript patterns route through the **`analyzing-logs`** skill.
 
 - "What model/task/config was this run?" → `read_eval_log(path, header_only=True)`
+- "Was the config changed mid-run?" → `log.config_updates` (populated by `inspect ctl config` since v0.3.250: who, when, old/new values, optional reason); `effective_eval_config(log)` / `effective_generate_config(log)` (in `inspect_ai.log`) fold the updates over the launch config
 - "Which samples failed or scored low?" → `read_eval_log_sample_summaries(path)` + filter by `s.error` / `s.scores`
 - "Show me sample 42 in detail" → `read_eval_log_sample(path, id=42)`
 - "Process every sample in this log" → `for s in read_eval_log_samples(path): ...`
@@ -194,4 +195,4 @@ Single-log questions only. Cross-log aggregates / transcript patterns route thro
 
 ---
 
-Last reviewed: 2026-06-05 against inspect_ai v0.3.235
+Last reviewed: 2026-06-05 against inspect_ai v0.3.235; the `config_updates` / `effective_*_config` entry validated 2026-08-24 against v0.3.260
