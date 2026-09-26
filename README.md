@@ -28,7 +28,7 @@ This installs all four skills. The bundled MCP server is registered and starts o
 
 #### Auto-update (recommended)
 
-Third-party marketplaces are manual-update by default. To get our changes automatically (every push to `main` lands in your next Claude Code session), copy-paste this into your `~/.claude/settings.json` (user-wide) or a repo's `.claude/settings.json` (shared: everyone who opens that repo gets the skills, without running the install commands):
+Third-party marketplaces are manual-update by default. To get our changes automatically (each new release lands in your next Claude Code session), copy-paste this into your `~/.claude/settings.json` (user-wide) or a repo's `.claude/settings.json` (shared: everyone who opens that repo gets the skills, without running the install commands):
 
 ```json
 {
@@ -169,10 +169,10 @@ Common prefixes and what they do:
 
 | Prefix | Effect on releases | Visible in CHANGELOG? |
 |---|---|---|
-| `feat:` | minor version bump on next Codex release | yes (Features) |
-| `fix:` | patch version bump on next Codex release | yes (Bug Fixes) |
-| `perf:` | patch version bump on next Codex release | yes (Performance Improvements) |
-| `revert:` | patch version bump on next Codex release | yes (Reverts) |
+| `feat:` | minor version bump on next release | yes (Features) |
+| `fix:` | patch version bump on next release | yes (Bug Fixes) |
+| `perf:` | patch version bump on next release | yes (Performance Improvements) |
+| `revert:` | patch version bump on next release | yes (Reverts) |
 | `docs:` | none on its own; piggybacks the next `feat:` / `fix:` | yes (Documentation) |
 | `refactor:` / `chore:` / `ci:` / `test:` | none | no |
 
@@ -180,10 +180,9 @@ Common prefixes and what they do:
 
 ### Releases
 
-Claude Code and Codex have different release flows because their plugin update models differ:
+Claude Code and Codex both cache the plugin by the `version` field in its manifest (`.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`). New commits to `main` do not reach users until the version bumps.
 
-- **Claude Code** uses the commit SHA as the implicit plugin version. If a user has enabled auto-update for the `meridian` marketplace, every push to `main` reaches them on their next session. By default, third-party marketplaces are manual-update, so users either toggle auto-update on (see [Install](#claude-code-recommended)) or run `/plugin marketplace update meridian` + `/reload-plugins` to pull changes.
+We use [release-please](https://github.com/googleapis/release-please-action) to cut those versions. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Merging the Release PR bumps the version in both manifests, after which:
 
-- **Codex** caches each plugin by the `version` field in `.codex-plugin/plugin.json`. New commits to `main` do not reach Codex users via `codex plugin marketplace upgrade meridian` until the version bumps.
-
-We use [release-please](https://github.com/googleapis/release-please-action) primarily to keep Codex users on the latest content. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Merging the Release PR bumps the version in `plugins/inspect-skills/.codex-plugin/plugin.json`, after which Codex users can run `codex plugin marketplace upgrade meridian` to pull the new content.
+- **Claude Code** users with auto-update enabled for the `meridian` marketplace get the release on their next session. By default, third-party marketplaces are manual-update, so users either toggle auto-update on (see [Install](#claude-code-recommended)) or run `/plugin marketplace update meridian` + `/reload-plugins` to pull changes.
+- **Codex** users run `codex plugin marketplace upgrade meridian` to pull the new content.

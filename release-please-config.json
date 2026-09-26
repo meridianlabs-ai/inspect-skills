@@ -15,6 +15,11 @@
       "extra-files": [
         {
           "type": "json",
+          "path": "plugins/inspect-skills/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "plugins/inspect-skills/.codex-plugin/plugin.json",
           "jsonpath": "$.version"
         }
