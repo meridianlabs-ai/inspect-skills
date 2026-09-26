@@ -182,7 +182,7 @@ Common prefixes and what they do:
 
 Claude Code and Codex both cache the plugin by the `version` field in its manifest (`.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`). New commits to `main` do not reach users until the version bumps.
 
-We use [release-please](https://github.com/googleapis/release-please-action) to cut those versions. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Merging the Release PR bumps the version in both manifests, after which:
+We use [release-please](https://github.com/googleapis/release-please-action) to cut those versions. On every push to `main`, release-please opens (or updates) a "Release PR" that proposes a version bump and a CHANGELOG entry based on the Conventional Commits in the new commits. Release PRs require approval from a code owner (see [`.github/CODEOWNERS`](.github/CODEOWNERS)). Merging the Release PR bumps the version in both manifests, after which:
 
 - **Claude Code** users with auto-update enabled for the `meridian` marketplace get the release on their next session. By default, third-party marketplaces are manual-update, so users either toggle auto-update on (see [Install](#claude-code-recommended)) or run `/plugin marketplace update meridian` + `/reload-plugins` to pull changes.
 - **Codex** users run `codex plugin marketplace upgrade meridian` to pull the new content.
