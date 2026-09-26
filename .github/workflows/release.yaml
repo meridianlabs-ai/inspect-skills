@@ -1,0 +1,28 @@
+name: Release
+
+# Bumps version + generates CHANGELOG + tags a GitHub release from the
+# Conventional Commits on main. Does NOT publish to any package registry
+# (release-type "simple"). The version bump is mirrored into both plugin
+# manifests (.claude-plugin/plugin.json and .codex-plugin/plugin.json), which
+# Claude Code and Codex use as their cache key for new releases.
+#
+# Release PRs are gated by code-owner review (see .github/CODEOWNERS).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release-please:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: meridianlabs-ai/actions/.github/workflows/release-please-python.yml@v1
+    with:
+      config-file: release-please-config.json
+      manifest-file: .release-please-manifest.json
+      # Nothing to publish, so no publish-approval ping; the approval gate is
+      # code-owner review on the release PR.
+      approval-ping: false
+    secrets: inherit
