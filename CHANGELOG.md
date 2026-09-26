@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.4...v0.4.5) (2026-09-26)
+
+
+### Bug Fixes
+
+* address Claude plugin directory review feedback ([#41](https://github.com/meridianlabs-ai/inspect-skills/issues/41)) ([36fad79](https://github.com/meridianlabs-ai/inspect-skills/commit/36fad7905e7a9aef08c16721fa2c486f55226272))
+
 ## [0.4.4](https://github.com/meridianlabs-ai/inspect-skills/compare/v0.4.3...v0.4.4) (2026-08-24)
 
 
